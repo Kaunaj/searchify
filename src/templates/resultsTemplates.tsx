@@ -70,9 +70,7 @@ export function resultsTemplate(
                         }}
                         data-searchstax-unique-result-id={ searchResult.uniqueId} key={searchResult.uniqueId} className="searchstax-result-item-link searchstax-result-item-link-wrapping" tabIndex={0}>
                         <div
-                          className={`searchstax-search-result ${
-                            searchResult.thumbnail ? "has-thumbnail" : ""
-                          }`}
+                          className="searchstax-search-result has-thumbnail"
                           key={searchResult.uniqueId}
                         >
                           {searchResult.promoted && (
@@ -91,9 +89,14 @@ export function resultsTemplate(
                             </div>
                           )}
 
-                          {searchResult.thumbnail && (
+                          {searchResult.thumbnail ? (
                             <img
-                              src={searchResult.thumbnail || "src/assets/search_default_thumbnail.png"}
+                              src={searchResult.thumbnail}
+                              className="searchstax-thumbnail"
+                            />
+                          ) : (
+                            <img
+                              src="src/assets/search_default_thumbnail.png"
                               className="searchstax-thumbnail"
                             />
                           )}
@@ -104,15 +107,15 @@ export function resultsTemplate(
                             </span>
                           </div>
 
-                          {searchResult.paths && (
-                            <p className="searchstax-search-result-common">
-                              {searchResult.paths}
-                            </p>
-                          )}
-
                           {searchResult.description && (
                             <p className="searchstax-search-result-description searchstax-search-result-common">
                               {searchResult.description}
+                            </p>
+                          )}
+
+                          {searchResult.url && (
+                            <p className="searchstax-search-result-common searchstax-search-result-link">
+                              {searchResult.url}
                             </p>
                           )}
 
