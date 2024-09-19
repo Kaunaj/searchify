@@ -77,7 +77,7 @@ export function paginationTemplate(
               {getPageNumbersToShow(paginationData).map((num, i) => <a key={i} className={!isLastPage(num) ? "searchstax-pagination-next" : "searchstax-pagination-previous"}
                 tabIndex={0}
                 style={
-                  num === Number(localStorage.getItem("page")) ? { fontWeight: "bold" } : {}
+                  num === Number(localStorage.getItem("page")) ? { fontWeight: "bold", textDecoration: "underline" } : {}
                 }
                 onClick={(e: any) => {
                   console.log("page number clicked", e.target.innerHTML);
