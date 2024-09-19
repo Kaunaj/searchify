@@ -31,6 +31,7 @@ import { InputTemplate } from "./templates/inputTemplates.js";
 
 // Custom Components
 import ScrollToTop from "./components/ScrollToTop.tsx";
+import { getItem, setItem } from "./utils/store.ts";
 
 function App() {
   //* Initializations *//
@@ -44,9 +45,9 @@ function App() {
 
   //* Helper functions *//
   function init() {
-    if (!localStorage.getItem("init")) {
-      localStorage.setItem("page", "1");
-      localStorage.setItem("init", "true");
+    if (!getItem("init")) {
+      setItem("page", "1");
+      setItem("init", "true");
     }
   }
 
@@ -62,7 +63,7 @@ function App() {
   }
 
   function beforeSearch(props: ISearchObject) {
-    const currentPage = localStorage?.getItem("nextOrPreviousClicked") === "true" ? props.page : Number(localStorage?.getItem("page"));
+    const currentPage = getItem("nextOrPreviousClicked") === "true" ? props.page : Number(getItem("page"));
     const propsCopy = { ...props, page: currentPage };
     return propsCopy;
   }

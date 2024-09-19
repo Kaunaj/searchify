@@ -1,4 +1,5 @@
 import { IPaginationData } from "@searchstax-inc/searchstudio-ux-js";
+import { getItem, setItem } from "../utils/store";
 
 export function paginationTemplate(
     paginationData: IPaginationData | null,
@@ -58,8 +59,8 @@ export function paginationTemplate(
                   paginationData?.isFirstPage ? { pointerEvents: "none" } : {}
                 }
                 onClick={(e) => {
-                  localStorage.setItem("nextOrPreviousClicked", "true");
-                  localStorage.setItem("page", String(Number(localStorage.getItem("page")) - 1));
+                  setItem("nextOrPreviousClicked", "true");
+                  setItem("page", String(Number(getItem("page")) - 1));
                   previousPage(e);
                 }}
                 onKeyDown={(e) => {
@@ -75,11 +76,11 @@ export function paginationTemplate(
               {getPageNumbersToShow(paginationData).map((num, i) => <a key={i} className={!isLastPage(num) ? "searchstax-pagination-next" : "searchstax-pagination-previous"}
                 tabIndex={0}
                 style={
-                  num === Number(localStorage.getItem("page")) ? { fontWeight: "bold", textDecoration: "underline" } : {}
+                  num === Number(getItem("page")) ? { fontWeight: "bold", textDecoration: "underline" } : {}
                 }
                 onClick={(e: any) => {
-                  localStorage.setItem("nextOrPreviousClicked", "false");
-                  localStorage.setItem("page", e.target.innerHTML);
+                  setItem("nextOrPreviousClicked", "false");
+                  setItem("page", e.target.innerHTML);
                   if (paginationData?.isLastPage) {
                     previousPage(e);
                   } else {
@@ -93,8 +94,8 @@ export function paginationTemplate(
                   paginationData?.isLastPage ? { pointerEvents: "none" } : {}
                 }
                 onClick={(e) => {
-                  localStorage.setItem("nextOrPreviousClicked", "true");
-                  localStorage.setItem("page", String(Number(localStorage.getItem("page")) + 1));
+                  setItem("nextOrPreviousClicked", "true");
+                  setItem("page", String(Number(getItem("page")) + 1));
                   nextPage(e);
                 }}
                 onKeyDown={(e) => {
