@@ -40,10 +40,15 @@ function App() {
   );
   const sessionId = makeId(25);
 
-  console.log('init in App', localStorage.getItem("init"));
-  if (!localStorage.getItem("init")) {
-    localStorage.setItem("page", "1");
-    localStorage.setItem("init", "true");
+  init();
+
+  //* Helper functions *//
+  function init() {
+    console.log('init in App', localStorage.getItem("init"));
+    if (!localStorage.getItem("init")) {
+      localStorage.setItem("page", "1");
+      localStorage.setItem("init", "true");
+    }
   }
 
   //* Helper functions *//
