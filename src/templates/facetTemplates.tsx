@@ -1,0 +1,500 @@
+import {
+  IFacetData,
+  IFacetValue,
+  IFacetValueData,
+  IFacetsTemplateData,
+} from "@searchstax-inc/searchstudio-ux-js";
+import { createRef } from "react";
+import { get } from "../utils/http";
+//@ts-ignore
+import { config } from "../config.js";
+
+async function prepareFacet(type: string, totalResults: number = 0) {
+  const facet: IFacetData = {
+    "values": [],
+    "name": type,
+    "label": format(type),
+    "showingAllFacets": false,
+    "hasMoreFacets": true
+  };
+  const values: any = {};
+
+  // get request
+  const headers: any = {};
+  headers["Authorization"] = `Token ${config.searchAuth}`;
+  headers["Content-Type"] = "application/json";
+  const allData = await get(`${config.searchURL}?q=${localStorage.getItem("query")}&start=0&rows=${totalResults}&flAdditional=author_name`, headers);
+  // console.log('allData', allData);
+
+  const { docs } = allData?.response;
+
+  for (let doc of docs) {
+    const value: string = doc?.[type]?.[0];
+    // console.log('doc:', doc);
+    if (value) {
+      // console.log('found value:', type, value);
+      if (!(value in values)) {
+        // add to facet values
+        console.log('adding to values:', value);
+        values[value] = {
+          "value": value,
+          "parentName": type,
+          "count": 1,
+          "type": "checkbox"
+        };
+      } else {
+        console.log('value present in values, increasing count');
+        values[value].count++;
+      }
+    }
+  }
+  console.log('facet values:', Object.values(values));
+  facet.values = Object.values(values);
+
+  if (facet.values.length) {
+    localStorage.setItem("author_name_facet", JSON.stringify(facet));
+  }
+}
+
+function format(str: string) {
+  return str.split("_").map(el => capitalize(el)).join(" ");
+}
+
+function capitalize(str: string) {
+  return str[0].toUpperCase() + str.slice(1);
+}
+
+export function facetsTemplateDesktop(
+  facetsTemplateDataDesktop: IFacetsTemplateData | null,
+  facetContainers: {
+    [key: string]: React.LegacyRef<HTMLDivElement> | undefined;
+  },
+  isNotDeactivated: (name: string) => boolean,
+  toggleFacetGroup: (name: string) => void,
+  selectFacet: (
+    index: string,
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    data: IFacetValueData,
+    isInput: boolean
+  ) => void,
+  isChecked: (facetValue: IFacetValueData) => boolean | undefined,
+  showMoreLessDesktop: (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    data: IFacetData
+  ) => void
+) {
+  console.log('facets:', {facetsTemplateDataDesktop, facetContainers });
+
+  if (facetsTemplateDataDesktop?.facets && localStorage.getItem("author_name_facet")) {
+    // facetsTemplateDataDesktop.facets = JSON.parse(localStorage.getItem("author_name_facet") as string).values;
+    checkAndUpdateFacets();
+  }
+
+  if (!localStorage.getItem("iife_called") && facetsTemplateDataDesktop?.facets?.length) {
+    (async () => {
+      console.log("CALLING IIFE");
+      localStorage.setItem("iife_called", "true");
+      await prepareFacet("author_name", facetsTemplateDataDesktop?.totalResults);
+    })();
+  }
+
+  setTimeout(checkAndUpdateFacets, 4000);
+
+  function checkAndUpdateFacets() {
+    console.log('checkAndUpdateFacets called');
+    const facets = facetsTemplateDataDesktop?.facets;
+    if (facets && JSON.parse(localStorage.getItem("author_name_facet") as string)?.values?.length) {
+      const newFacet = JSON.parse(localStorage.getItem("author_name_facet") as string);
+      const existingFacetNames = new Set(facets?.map(facet => facet.name));
+      console.log('CHECKING UPDATE FACET', newFacet.name, existingFacetNames);
+  
+      if (!existingFacetNames.has(newFacet.name)) {
+        console.log("UPDATING FACETS TEMPLATE DESKTOP");
+        facetsTemplateDataDesktop.facets.push(JSON.parse(localStorage.getItem("author_name_facet") as string));
+        localStorage.setItem("author_facet_added", "true");
+        console.log('updated facets:', facetsTemplateDataDesktop?.facets);
+        // window.location.reload();
+      }
+    }
+  }
+
+  return (
+    <div className="searchstax-facets-container-desktop">
+      {<>{facetsTemplateDataDesktop?.facets.map((facet) => {
+        return (
+          <div
+            className={`searchstax-facet-container ${
+              isNotDeactivated(facet.name) ? "active" : ""
+            }`}
+            key={facet.name + "desktop"}
+          >
+            <div>
+              <div
+                className="searchstax-facet-title-container"
+                onClick={() => {
+                  toggleFacetGroup(facet.name);
+                }}
+              >
+                <div className="searchstax-facet-title">
+                  {" "}
+                  {facet.label}
+                </div>
+                <div className="searchstax-facet-title-arrow active"></div>
+              </div>
+              <div className="searchstax-facet-values-container" aria-live="polite">
+                {facet.values.map(
+                  //@ts-ignore
+                  (facetValue: IFacetValueData, key) => {
+                    facetContainers[key + facet.name] = createRef();
+                    return (
+                      <div
+                        key={facetValue.value + facetValue.parentName}
+                        className={`searchstax-facet-value-container ${
+                          facetValue.disabled
+                            ? "searchstax-facet-value-disabled"
+                            : ""
+                        }`}
+                        ref={facetContainers[key + facet.name]}
+                      >
+                        <div
+                          className={
+                            "searchstax-facet-input" +
+                            " desktop-" +
+                            key +
+                            facet.name
+                          }
+                        >
+                          <input
+                            type="checkbox"
+                            className="searchstax-facet-input-checkbox"
+                            checked={isChecked(facetValue)}
+                            readOnly={true}
+                            aria-label={facetValue.value + ' ' + facetValue.count}
+                            disabled={facetValue.disabled}
+                            onClick={(e) => {
+                              selectFacet(
+                                key + facet.name,
+                                e,
+                                facetValue,
+                                true
+                              );
+                            }}
+                          />
+                        </div>
+                        <div
+                          className="searchstax-facet-value-label"
+                          onClick={(e) => {
+                            selectFacet(key + facet.name, e, facetValue, false);
+                          }}
+                        >
+                          {facetValue.value}
+                        </div>
+                        <div
+                          className="searchstax-facet-value-count"
+                          onClick={(e) => {
+                            selectFacet(key + facet.name, e, facetValue, false);
+                          }}
+                        >
+                          ({facetValue.count})
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
+
+                {facet.hasMoreFacets && (
+                  <div className="searchstax-facet-show-more-container">
+                    <div
+                      className="searchstax-facet-show-more-container"
+                      onClick={(e) => {
+                        showMoreLessDesktop(e, facet);
+                      }}
+                      onKeyDown={(e) => {
+                        if(e.key === 'Enter' || e.key === ' ') {
+                          showMoreLessDesktop(e as any, facet);
+                        }
+                      }}
+                      tabIndex={0}
+                    >
+                      {facet.showingAllFacets && (
+                        <div className="searchstax-facet-show-less-button searchstax-facet-show-button">
+                          less
+                        </div>
+                      )}
+                      {!facet.showingAllFacets && (
+                        <div className="searchstax-facet-show-more-button  searchstax-facet-show-button">
+                          more
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}</>}
+    </div>
+  );
+}
+
+export function facetsTemplateMobile(
+  facetsTemplateDataMobile: IFacetsTemplateData | null,
+  selectedFacetsCheckboxes: IFacetValue[],
+  facetContainers: {
+    [key: string]: React.LegacyRef<HTMLDivElement> | undefined;
+  },
+  isNotDeactivated: (name: string) => boolean,
+  toggleFacetGroup: (name: string) => void,
+  selectFacet: (
+    index: string,
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    data: IFacetValueData,
+    isInput: boolean,
+    isMobile?: boolean
+  ) => void,
+  isChecked: (facetValue: IFacetValueData) => boolean | undefined,
+  unselectFacet: (facet: IFacetValue) => void,
+  showMoreLessMobile: (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    data: IFacetData
+  ) => void,
+  openOverlay: () => void,
+  closeOverlay: () => void,
+  unselectAll: () => void
+) {
+  console.log('facets:', {facetsTemplateDataMobile, facetContainers });
+
+  if (facetsTemplateDataMobile?.facets && localStorage.getItem("author_name_facet")) {
+    // facetsTemplateDataDesktop.facets = JSON.parse(localStorage.getItem("author_name_facet") as string).values;
+    checkAndUpdateFacets();
+  }
+
+  if (!localStorage.getItem("iife_called") && facetsTemplateDataMobile?.facets?.length) {
+    (async () => {
+      console.log("CALLING IIFE");
+      localStorage.setItem("iife_called", "true");
+      await prepareFacet("author_name", facetsTemplateDataMobile?.totalResults);
+    })();
+  }
+
+  setTimeout(checkAndUpdateFacets, 4000);
+
+  function checkAndUpdateFacets() {
+    console.log('checkAndUpdateFacets called');
+    const facets = facetsTemplateDataMobile?.facets;
+    if (facets && JSON.parse(localStorage.getItem("author_name_facet") as string)?.values?.length) {
+      const newFacet = JSON.parse(localStorage.getItem("author_name_facet") as string);
+      const existingFacetNames = new Set(facets?.map(facet => facet.name));
+      console.log('CHECKING UPDATE FACET', newFacet.name, existingFacetNames);
+  
+      if (!existingFacetNames.has(newFacet.name)) {
+        console.log("UPDATING FACETS TEMPLATE DESKTOP");
+        facetsTemplateDataMobile.facets.push(JSON.parse(localStorage.getItem("author_name_facet") as string));
+        localStorage.setItem("author_facet_added", "true");
+        console.log('updated facets:', facetsTemplateDataMobile?.facets);
+        // window.location.reload();
+      }
+    }
+  }
+
+  return facetsTemplateDataMobile ? (
+    <div className="searchstax-facets-container-mobile">
+      <div className="searchstax-facets-pills-container">
+        <div
+          className="searchstax-facets-pill searchstax-facets-pill-filter-by"
+          onClick={() => {
+            openOverlay();
+          }}
+        >
+          <div className="searchstax-facets-pill-label">Filter By</div>
+        </div>
+        <div className="searchstax-facets-pills-selected">
+          {selectedFacetsCheckboxes.map((facet) => {
+            return (
+              <div
+                className="searchstax-facets-pill searchstax-facets-pill-facets"
+                key={facet.value}
+                onClick={() => {
+                  unselectFacet(facet);
+                }}
+              >
+                <div className="searchstax-facets-pill-label">
+                  {facet.value} ({facet.count})
+                </div>
+                <div className="searchstax-facets-pill-icon-close"></div>
+              </div>
+            );
+          })}
+          {selectedFacetsCheckboxes.length !== 0 && (
+            <div
+              className="searchstax-facets-pill searchstax-clear-filters searchstax-facets-pill-clear-all"
+              onClick={() => {
+                unselectAll();
+              }}
+            >
+              <div className="searchstax-facets-pill-label">Clear Filters</div>
+            </div>
+          )}
+        </div>
+        <div
+          className={`searchstax-facets-mobile-overlay ${
+            //@ts-ignore
+            facetsTemplateDataMobile.overlayOpened ? "searchstax-show" : ""
+          }`}
+        >
+          <div className="searchstax-facets-mobile-overlay-header">
+            <div className="searchstax-facets-mobile-overlay-header-title">
+              Filter By
+            </div>
+            <div
+              className="searchstax-search-close"
+              onClick={() => {
+                closeOverlay();
+              }}
+            ></div>
+          </div>
+          <div className="searchstax-facets-container-mobile">
+            {facetsTemplateDataMobile?.facets.map((facet) => {
+              return (
+                <div
+                  key={facet.name + "mobile"}
+                  className={`searchstax-facet-container ${
+                    isNotDeactivated(facet.name) ? `active` : ``
+                  }`}
+                >
+                  <div>
+                    <div
+                      className="searchstax-facet-title-container"
+                      onClick={() => {
+                        toggleFacetGroup(facet.name);
+                      }}
+                    >
+                      <div className="searchstax-facet-title">
+                        {" "}
+                        {facet.label}{" "}
+                      </div>
+                      <div className="searchstax-facet-title-arrow active"></div>
+                    </div>
+                    <div className="searchstax-facet-values-container" aria-live="polite">
+                      {facet.values.map(
+                        //@ts-ignore
+                        (facetValue: IFacetValueData, key) => {
+                          facetContainers[key + facet.name] = createRef();
+
+                          return (
+                            <div
+                              key={facetValue.value + facetValue.parentName}
+                              className={`searchstax-facet-value-container ${
+                                facetValue.disabled
+                                  ? `searchstax-facet-value-disabled`
+                                  : ``
+                              }`}
+                              ref={facetContainers[key + facet.name]}
+                            >
+                              <div
+                                className={
+                                  "searchstax-facet-input" +
+                                  " mobile-" +
+                                  key +
+                                  facet.name
+                                }
+                              >
+                                <input
+                                  type="checkbox"
+                                  className="searchstax-facet-input-checkbox"
+                                  checked={isChecked(facetValue)}
+                                  readOnly={true}
+                                  aria-label={facetValue.value + ' ' + facetValue.count}
+                                  disabled={facetValue.disabled}
+                                  onClick={(e) => {
+                                    selectFacet(
+                                      key + facet.name,
+                                      e,
+                                      facetValue,
+                                      true,
+                                      true
+                                    );
+                                  }}
+                                />
+                              </div>
+                              <div
+                                className="searchstax-facet-value-label"
+                                onClick={(e) => {
+                                  selectFacet(
+                                    key + facet.name,
+                                    e,
+                                    facetValue,
+                                    false
+                                  );
+                                }}
+                              >
+                                {facetValue.value}
+                              </div>
+                              <div
+                                className="searchstax-facet-value-count"
+                                onClick={(e) => {
+                                  selectFacet(
+                                    key + facet.name,
+                                    e,
+                                    facetValue,
+                                    false
+                                  );
+                                }}
+                              >
+                                ({facetValue.count})
+                              </div>
+                            </div>
+                          );
+                        }
+                      )}
+
+                      <div
+                        className="searchstax-facet-show-more-container"
+                        v-if="facet.hasMoreFacets"
+                      >
+                        <div
+                          className="searchstax-facet-show-more-container"
+                          onClick={(e) => {
+                            showMoreLessMobile(e, facet);
+                          }}
+                          onKeyDown={(e) => {
+                            if(e.key === 'Enter' || e.key === ' ') {
+                              showMoreLessMobile(e as any, facet);
+                            }
+                          }}
+                          tabIndex={0}
+                        >
+                          {facet.showingAllFacets && (
+                            <div className="searchstax-facet-show-less-button searchstax-facet-show-button">
+                              less
+                            </div>
+                          )}
+                          {!facet.showingAllFacets && (
+                            <div className="searchstax-facet-show-more-button  searchstax-facet-show-button">
+                              more
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <button
+            className="searchstax-facets-mobile-overlay-done"
+            onClick={() => {
+              closeOverlay();
+            }}
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <></>
+  );
+}
