@@ -6,7 +6,6 @@ export default function ScrollToTop() {
   window.addEventListener("scroll", () => decideScrollerDisplay(), false);
 
   function decideScrollerDisplay() {
-    // e.preventDefault();
     if (isScrollerVisibleInViewport()) {
       setShowScroller(false);
     } else {
@@ -22,7 +21,6 @@ export default function ScrollToTop() {
   };
 
   function scrollToTop() {
-    console.log('scrollToTop clicked', document.getElementsByClassName("scroller")[0]);
     document.getElementsByClassName("scroller")[0].scrollIntoView({behavior: "smooth"});
   }
 

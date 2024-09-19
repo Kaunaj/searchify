@@ -44,7 +44,6 @@ function App() {
 
   //* Helper functions *//
   function init() {
-    console.log('init in App', localStorage.getItem("init"));
     if (!localStorage.getItem("init")) {
       localStorage.setItem("page", "1");
       localStorage.setItem("init", "true");
@@ -64,16 +63,12 @@ function App() {
 
   function beforeSearch(props: ISearchObject) {
     const currentPage = localStorage?.getItem("nextOrPreviousClicked") === "true" ? props.page : Number(localStorage?.getItem("page"));
-    console.log('beforeSearch called', props);
-
     const propsCopy = { ...props, page: currentPage };
     return propsCopy;
   }
 
   function afterSearch(results: ISearchstaxParsedResult[]) {
-    console.log('afterSearch called', results);
     const copy = [...results];
-    // console.log('docs:', copy.);
     return copy;
   }
 
@@ -94,7 +89,6 @@ function App() {
 
   function afterLinkClick(result: ISearchstaxParsedResult) {
     // gets result that was clicked, if passed along further functions will execute, if null then event gets canceled
-    console.log('result in afterLinkClicked', result);
     const resultCopy = { ...result };
 
     if (result.url) window.open(result.url, "_self");
@@ -116,7 +110,7 @@ function App() {
           afterSearch={afterSearch}
           authType={config.authType}
           sessionId={sessionId}
-          // analyticsBaseUrl={config.analyticsBaseUrl}
+          analyticsBaseUrl={config.analyticsBaseUrl}
           router={{ enabled: true }}
           language={config.language}
         >

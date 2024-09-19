@@ -43,7 +43,6 @@ export function resultsTemplate(
     event: any
   ) => ISearchstaxParsedResult[]
 ): React.ReactElement {
-  // console.log('searchResults:', searchResults);
 
   function formatDate(dateString: string = new Date().toISOString()) {
     return new Date(dateString).toLocaleDateString();
@@ -62,7 +61,6 @@ export function resultsTemplate(
                     searchResults.map(function (searchResult) {
                       return (
                         <a href={searchResult.url ?? ''} onClick={event => {
-                          console.log('result clicked');
                           resultClicked(searchResult, event);
                         }}
                         onKeyDown={(e) => {
@@ -81,10 +79,8 @@ export function resultsTemplate(
                             <div className="searchstax-search-result-promoted"></div>
                           )}
 
-
                           {searchResult.ribbon && (
                             <div className="searchstax-search-result-ribbon">
-                              {/* {searchResult.ribbon} */}
                               <div className="searchstax-search-result-ribbon-img-container">
                                 <img
                                   className="searchstax-search-result-ribbon-img"

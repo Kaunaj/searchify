@@ -7,7 +7,6 @@ export function paginationTemplate(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
     ) => void
   ) {
-    // console.log('paginationData:', paginationData);
 
     function getLastPageNumber(totalResults: number, resultsPerPage: number): number {
       return Math.ceil(totalResults / resultsPerPage);
@@ -43,7 +42,6 @@ export function paginationTemplate(
       if (end !== lastPageNum) {
         pageNums.push(lastPageNum);
       }
-      // console.log('pages to show:', pageNums);
 
       return pageNums;
     }
@@ -80,7 +78,6 @@ export function paginationTemplate(
                   num === Number(localStorage.getItem("page")) ? { fontWeight: "bold", textDecoration: "underline" } : {}
                 }
                 onClick={(e: any) => {
-                  console.log("page number clicked", e.target.innerHTML);
                   localStorage.setItem("nextOrPreviousClicked", "false");
                   localStorage.setItem("page", e.target.innerHTML);
                   if (paginationData?.isLastPage) {

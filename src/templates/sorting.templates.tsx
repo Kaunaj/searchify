@@ -19,20 +19,12 @@ export function searchSortingTemplate(
                 className="searchstax-search-order-select"
                 value={selectedSorting}
                 onChange={(e) => {
-                  console.log("e.target.value", e.target.value);
                   orderChange(e.target.value);
                 }}
               >
                 <option value=""> Relevance </option>
                 <option value="content_type asc"> Content Type A-Z </option>
                 <option value="content_type desc"> Content Type Z-A </option>
-                {/* {sortingData.sortOptions.map(function (sortOption) {
-                  return (
-                    <option key={sortOption.key} value={sortOption.key}>
-                      {sortOption.value}
-                    </option>
-                  );
-                })} */}
               </select>
             </div>
           )}
