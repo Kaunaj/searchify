@@ -31,6 +31,7 @@ import { InputTemplate } from "./templates/inputTemplates.js";
 
 // Custom Components
 import ScrollToTop from "./components/ScrollToTop.tsx";
+import Header from "./components/Header.tsx";
 import { getItem, setItem } from "./utils/store.ts";
 
 function App() {
@@ -101,6 +102,7 @@ function App() {
     <>
       <div className="main">
         <div className="scroller"></div>
+        <Header></Header>
         <SearchstaxWrapper
           searchURL={config.searchURL}
           suggesterURL={config.suggesterURL}
