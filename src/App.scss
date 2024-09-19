@@ -28,14 +28,6 @@ h1 {
   justify-content: space-between;
 }
 
-#searchstax-input-container {
-  position: sticky;
-  top: 0;
-  background-color: $white;
-  border-bottom: 0.1em solid $grey;
-  z-index: 9;
-}
-
 .searchstax-search-input-container {
   width: 50%;
   background-color: $white;
