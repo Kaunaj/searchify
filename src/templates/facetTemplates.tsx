@@ -5,64 +5,8 @@ import {
   IFacetsTemplateData,
 } from "@searchstax-inc/searchstudio-ux-js";
 import { createRef } from "react";
-import { get } from "../utils/http";
 //@ts-ignore
 import { config } from "../config.js";
-
-async function prepareFacet(type: string, totalResults: number = 0) {
-  const facet: IFacetData = {
-    "values": [],
-    "name": type,
-    "label": format(type),
-    "showingAllFacets": false,
-    "hasMoreFacets": true
-  };
-  const values: any = {};
-
-  // get request
-  const headers: any = {};
-  headers["Authorization"] = `Token ${config.searchAuth}`;
-  headers["Content-Type"] = "application/json";
-  const allData = await get(`${config.searchURL}?q=${localStorage.getItem("query")}&start=0&rows=${totalResults}&flAdditional=author_name`, headers);
-  // console.log('allData', allData);
-
-  const { docs } = allData?.response;
-
-  for (let doc of docs) {
-    const value: string = doc?.[type]?.[0];
-    // console.log('doc:', doc);
-    if (value) {
-      // console.log('found value:', type, value);
-      if (!(value in values)) {
-        // add to facet values
-        console.log('adding to values:', value);
-        values[value] = {
-          "value": value,
-          "parentName": type,
-          "count": 1,
-          "type": "checkbox"
-        };
-      } else {
-        console.log('value present in values, increasing count');
-        values[value].count++;
-      }
-    }
-  }
-  console.log('facet values:', Object.values(values));
-  facet.values = Object.values(values);
-
-  if (facet.values.length) {
-    localStorage.setItem("author_name_facet", JSON.stringify(facet));
-  }
-}
-
-function format(str: string) {
-  return str.split("_").map(el => capitalize(el)).join(" ");
-}
-
-function capitalize(str: string) {
-  return str[0].toUpperCase() + str.slice(1);
-}
 
 export function facetsTemplateDesktop(
   facetsTemplateDataDesktop: IFacetsTemplateData | null,
@@ -83,41 +27,6 @@ export function facetsTemplateDesktop(
     data: IFacetData
   ) => void
 ) {
-  console.log('facets:', {facetsTemplateDataDesktop, facetContainers });
-
-  if (facetsTemplateDataDesktop?.facets && localStorage.getItem("author_name_facet")) {
-    // facetsTemplateDataDesktop.facets = JSON.parse(localStorage.getItem("author_name_facet") as string).values;
-    checkAndUpdateFacets();
-  }
-
-  if (!localStorage.getItem("iife_called") && facetsTemplateDataDesktop?.facets?.length) {
-    (async () => {
-      console.log("CALLING IIFE");
-      localStorage.setItem("iife_called", "true");
-      await prepareFacet("author_name", facetsTemplateDataDesktop?.totalResults);
-    })();
-  }
-
-  setTimeout(checkAndUpdateFacets, 4000);
-
-  function checkAndUpdateFacets() {
-    console.log('checkAndUpdateFacets called');
-    const facets = facetsTemplateDataDesktop?.facets;
-    if (facets && JSON.parse(localStorage.getItem("author_name_facet") as string)?.values?.length) {
-      const newFacet = JSON.parse(localStorage.getItem("author_name_facet") as string);
-      const existingFacetNames = new Set(facets?.map(facet => facet.name));
-      console.log('CHECKING UPDATE FACET', newFacet.name, existingFacetNames);
-  
-      if (!existingFacetNames.has(newFacet.name)) {
-        console.log("UPDATING FACETS TEMPLATE DESKTOP");
-        facetsTemplateDataDesktop.facets.push(JSON.parse(localStorage.getItem("author_name_facet") as string));
-        localStorage.setItem("author_facet_added", "true");
-        console.log('updated facets:', facetsTemplateDataDesktop?.facets);
-        // window.location.reload();
-      }
-    }
-  }
-
   return (
     <div className="searchstax-facets-container-desktop">
       {<>{facetsTemplateDataDesktop?.facets.map((facet) => {
@@ -263,41 +172,6 @@ export function facetsTemplateMobile(
   closeOverlay: () => void,
   unselectAll: () => void
 ) {
-  console.log('facets:', {facetsTemplateDataMobile, facetContainers });
-
-  if (facetsTemplateDataMobile?.facets && localStorage.getItem("author_name_facet")) {
-    // facetsTemplateDataDesktop.facets = JSON.parse(localStorage.getItem("author_name_facet") as string).values;
-    checkAndUpdateFacets();
-  }
-
-  if (!localStorage.getItem("iife_called") && facetsTemplateDataMobile?.facets?.length) {
-    (async () => {
-      console.log("CALLING IIFE");
-      localStorage.setItem("iife_called", "true");
-      await prepareFacet("author_name", facetsTemplateDataMobile?.totalResults);
-    })();
-  }
-
-  setTimeout(checkAndUpdateFacets, 4000);
-
-  function checkAndUpdateFacets() {
-    console.log('checkAndUpdateFacets called');
-    const facets = facetsTemplateDataMobile?.facets;
-    if (facets && JSON.parse(localStorage.getItem("author_name_facet") as string)?.values?.length) {
-      const newFacet = JSON.parse(localStorage.getItem("author_name_facet") as string);
-      const existingFacetNames = new Set(facets?.map(facet => facet.name));
-      console.log('CHECKING UPDATE FACET', newFacet.name, existingFacetNames);
-  
-      if (!existingFacetNames.has(newFacet.name)) {
-        console.log("UPDATING FACETS TEMPLATE DESKTOP");
-        facetsTemplateDataMobile.facets.push(JSON.parse(localStorage.getItem("author_name_facet") as string));
-        localStorage.setItem("author_facet_added", "true");
-        console.log('updated facets:', facetsTemplateDataMobile?.facets);
-        // window.location.reload();
-      }
-    }
-  }
-
   return facetsTemplateDataMobile ? (
     <div className="searchstax-facets-container-mobile">
       <div className="searchstax-facets-pills-container">

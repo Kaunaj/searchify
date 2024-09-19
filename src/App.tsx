@@ -60,28 +60,7 @@ function App() {
   function beforeSearch(props: ISearchObject) {
     const currentPage = localStorage?.getItem("nextOrPreviousClicked") === "true" ? props.page : Number(localStorage?.getItem("page"));
     console.log('beforeSearch called', props);
-    localStorage.removeItem("iife_called");
 
-    if (props.query !== localStorage.getItem("query")) {
-      console.log("Received new query:", props.query);
-      localStorage.removeItem("author_facet_added");
-      localStorage.removeItem("author_name_facet");
-      localStorage.setItem("query", props.query);
-    }
-    // localStorage.removeItem("author_facet_added");
-
-    // props.facets = [
-    //   // {
-    //   //   name: "url",
-    //   //   type: "and",
-    //   //   value: "https://www.searchstax.com/events/drupalcon-lille/"
-    //   // }
-    //   {
-    //     name: "author_name",
-    //     type: "and",
-    //     value: "Admin"
-    //   }
-    // ];
     const propsCopy = { ...props, page: currentPage };
     return propsCopy;
   }
